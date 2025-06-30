@@ -1,0 +1,78 @@
+// you can write GLSL code directly in here
+
+/**
+  * @param uv notConnect=v_uv.xy
+  * @presicion fixed
+*/
+vec2 PolarCoordinates (vec2 uv, vec2 center, float radialScale, float lengthScale) {
+  vec2 delta = uv - center;
+  float radius = length(delta) * 2. * radialScale;
+  float angle = atan(delta.y, delta.x) * 1.0/6.28 * lengthScale;
+  return vec2(radius, angle);
+}
+
+/**
+  * @param uv notConnect=v_uv.xy
+  * @presicion fixed
+*/
+vec2 RotateCoordinates (vec2 uv, vec2 center, float rotation) {
+  //rotation matrix
+  uv -= center;
+  float s = sin(rotation);
+  float c = cos(rotation);
+
+  //center rotation matrix
+  mat2 rMatrix = mat2(c, -s, s, c);
+  rMatrix *= 0.5;
+  rMatrix += 0.5;
+  rMatrix = rMatrix*2. - 1.;
+
+  //multiply the UVs by the rotation matrix
+  uv *= rMatrix;
+  uv += center;
+
+  return uv;
+}
+
+/**
+  * @param uv notConnect=v_uv.xy
+  * @presicion fixed
+  * @inline
+*/
+vec2 TillingAndOffset (vec2 uv, vec2 tilling, vec2 offset) {
+  return uv * tilling + offset;
+}
+
+vec2 hashTchou(vec2 p) {
+    // Simple hash inspired by Unity's Hash_Tchou
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 voronoiRandom(vec2 uv, float offset) {
+    vec2 h = hashTchou(uv);
+    return vec2(sin(h.y * offset), cos(h.x * offset)) * 0.5 + 0.5;
+}
+
+vec2 voronoi(vec2 uv, float angleOffset, float cellDensity) {
+    vec2 g = floor(uv * cellDensity);
+    vec2 f = fract(uv * cellDensity);
+
+    float minDist = 8.0;
+    vec2 bestOffset = vec2(0.0);
+
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            vec2 lattice = vec2(float(x), float(y));
+            vec2 randOffset = voronoiRandom(g + lattice, angleOffset);
+            float d = distance(lattice + randOffset, f);
+            if (d < minDist) {
+                minDist = d;
+                bestOffset = randOffset;
+            }
+        }
+    }
+
+    return vec2(minDist, bestOffset.x); // match Unity: Out = distance, Cells = offset.x
+}
