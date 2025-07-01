@@ -79,9 +79,7 @@ export class Card extends Component {
     });
 
     this.node.on(Node.EventType.MOUSE_MOVE, (event: EventMouse) => {
-      // const location =event.getUILocation();
       this.cardVisual.setMouseMoveLocation(event.getUILocation());
-      // console.log('mouse move', location);
     });
 
     this.node.on(Node.EventType.TOUCH_START, (event: EventTouch) => {

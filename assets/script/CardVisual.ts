@@ -123,6 +123,7 @@ export class CardVisual extends Component {
   // private shadowOffset = 20;
   private shadowOffset = v3(-133, -191).normalize().multiplyScalar(20);
   private savedIdx = 0;
+  private materialIdx = 0;
 
   onLoad() {
     const visualContainer = find("Canvas/card-visual-container");
@@ -130,9 +131,9 @@ export class CardVisual extends Component {
   }
 
   start() {
-    const randomNumer = Math.floor(Math.random() * 3);
-    if (randomNumer < 2) {
-      this.sprite.setMaterialInstance(this.materials[randomNumer], 0);
+    this.materialIdx = Math.floor(Math.random() * 3);
+    if (this.materialIdx < 2) {
+      this.sprite.setMaterialInstance(this.materials[this.materialIdx], 0);
       this.material = this.sprite.getMaterialInstance(0);
     } else {
       this.material = this.sprite.sharedMaterial;
@@ -148,30 +149,27 @@ export class CardVisual extends Component {
     this.card = card;
     this.node.setPosition(this.card.visualPosition);
     this.node.setParent(find("Canvas/card-visual-container"));
-
-    // if (this.card.parentIdx === 0) {
-    //   this.node.setWorldScale(1.5, 1.5, 1);
-    // }
   }
 
   update(deltaTime: number) {
-    let xAngle = this.clampAngle(this.tiltAnchor.eulerAngles.x, -90, 90);
-    let yAngle = this.clampAngle(this.tiltAnchor.eulerAngles.y, -90, 90);
-
-    xAngle = remap(xAngle, -20, 20, -0.5, 0.5);
-    yAngle = remap(yAngle, -20, 20, -0.5, 0.5);
-
-    const h = this.material.passes[0].getHandle("rotation"); // Get the handle of the corresponding Uniform
-    this.material.passes[0].setUniform(h, v2(xAngle, yAngle)); // Use 'Pass.setUniform' to set the Uniform property
+    // handle polychrome matieial
+    if (this.materialIdx === 0) {
+      let xAngle = this.clampAngle(this.tiltAnchor.eulerAngles.x, -90, 90);
+      let yAngle = this.clampAngle(this.tiltAnchor.eulerAngles.y, -90, 90);
+  
+      xAngle = remap(xAngle, -20, 20, -0.5, 0.5);
+      yAngle = remap(yAngle, -20, 20, -0.5, 0.5);
+  
+      const h = this.material.passes[0].getHandle("rotation"); // Get the handle of the corresponding Uniform
+      this.material.passes[0].setUniform(h, v2(xAngle, yAngle)); // Use 'Pass.setUniform' to set the Uniform property
+    }
 
     this.time += deltaTime;
 
-    if (this.card != null) {
-      this.handPositioning();
-      this.smoothFollow(deltaTime);
-      this.followRotation(deltaTime);
-      this.cardTilt(deltaTime);
-    }
+    this.handPositioning();
+    this.smoothFollow(deltaTime);
+    this.followRotation(deltaTime);
+    this.cardTilt(deltaTime);
   }
 
   handPositioning() {
@@ -274,10 +272,6 @@ export class CardVisual extends Component {
       Math.sin(this.time + this.savedIdx) * (this.card.hovering ? 0.2 : 1);
     const cosine =
       Math.cos(this.time + this.savedIdx) * (this.card.hovering ? 0.2 : 1);
-    // const worldTiltEulerAngles = Quat.toEuler(v3(), this.tiltAnchor.worldRotation);
-    if (this.card.parentIdx === 0) {
-      // console.log('euler get', worldTiltEulerAngles.x, worldTiltEulerAngles.y, worldTiltEulerAngles.z);
-    }
 
     const offset = Vec3.subtract(
       this.posVec,
@@ -312,22 +306,7 @@ export class CardVisual extends Component {
       (this.tiltSpeed / 2) * deltaTime
     );
 
-    // this.tiltAnchor.eulerAngles = v3(lerpX, lerpY, lerpZ);
-    // const worldRot = Quat.fromEuler(quat(), lerpX, lerpY, lerpZ);
-    if (this.card.parentIdx === 0) {
-      // console.log('euler save', lerpX, lerpY, lerpZ);
-      // console.log('tilt x y', tiltX, tiltY);
-      // console.log('lerp z', tiltZ, worldTiltEulerAngles.z, lerpZ);
-      // console.log('offset tilt', offset);
-      console.log(
-        "world rot",
-        this.tiltAnchor.worldRotation.getEulerAngles(v3())
-      );
-    }
     this.tiltAnchor.eulerAngles = v3(lerpX, lerpY, lerpZ);
-
-    // this.tiltAnchor.setWorldRotationFromEuler(lerpX, lerpY, lerpZ);
-    // this.node.setRotationFromEuler(lerpX, lerpY, lerpZ);
   }
 
   lerpAngle(a: number, b: number, t: number): number {
