@@ -153,7 +153,7 @@ export class CardVisual extends Component {
 
   update(deltaTime: number) {
     // handle polychrome matieial
-    if (this.materialIdx === 0) {
+    if (this.materialIdx === 0 || this.materialIdx === 1) {
       let xAngle = this.clampAngle(this.tiltAnchor.eulerAngles.x, -90, 90);
       let yAngle = this.clampAngle(this.tiltAnchor.eulerAngles.y, -90, 90);
   
